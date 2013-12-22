@@ -7,11 +7,12 @@ package
 	import flash.display3D.Context3DProfile;
 	import flash.display3D.Context3DRenderMode;
 	import flash.events.Event;
+	import flash.events.MouseEvent;
 	import flash.geom.Rectangle;
 	
 	import starling.core.Starling;
 	
-	[SWF(frameRate="60",width="900",height="600")]
+	[SWF(frameRate="60",width="1024",height="600")]
 	public class DynamicShadows2D extends Sprite
 	{
 		private var _starling:Starling;
@@ -21,22 +22,24 @@ package
 		{
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
-
+			stage.addEventListener(MouseEvent.RIGHT_CLICK, function(e:Event):void {});
+			
 			// save a reference to the stage3D instance we're using
 			stage3D = stage.stage3Ds[0];
 			
 			// create the 3D context
 			stage3D.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated, false, 0, true);
-			stage3D.requestContext3D();
+			stage3D.requestContext3D(Context3DRenderMode.AUTO, Context3DProfile.BASELINE_EXTENDED);
 		}
 		
 		private function onContextCreated(event:Event):void
 		{
+			stage3D.context3D.enableErrorChecking = true;
 			stage3D.context3D.configureBackBuffer(stage.stageWidth, stage.stageHeight, 0, false);
 			
-			var viewport:Rectangle = new Rectangle(0, 0, 900, 600);
+			var viewport:Rectangle = new Rectangle(0, 0, 1024, 600);
 			
-			_starling = new Starling(StarlingApp, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.BASELINE_EXTENDED);			
+			_starling = new Starling(DynamicShadows2DTest, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.BASELINE_EXTENDED);			
 			_starling.stage.stageWidth  = stage.stageWidth;
 			_starling.stage.stageHeight = stage.stageHeight;
 			_starling.enableErrorChecking = true;
