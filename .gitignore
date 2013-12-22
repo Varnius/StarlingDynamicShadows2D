@@ -1,5 +1,20 @@
-html-template
-bin-debug
-/.settings
+# Build and Release Folders
+bin-debug/
+bin-release/
+starling/doc/html/
+
+# Project property files
+.settings/
+.flexProperties
+.FlexUnitSettings
+.idea/
+
+# OS X folders
+.DS_Store
+/starling/bin/StarlingMRTFork.swc
+/starling/.flexLibProperties
+/starling/.project
+/starling/.actionScriptProperties
 /.actionScriptProperties
 /.project
+/html-template
