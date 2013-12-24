@@ -12,4 +12,4 @@ TODOs:
 * Ambient and cone lights.
 * Dynamic 2D shadows.
 
-Deferred renderer is partially based on [1](http://www.catalinzima.com/xna/tutorials/deferred-rendering-in-xna/) and [2](http://www.soolstyle.com/2010/06/29/2d-lightning-continued/).
+Deferred renderer is partially based on blog posts [here](http://www.catalinzima.com/xna/tutorials/deferred-rendering-in-xna/) and [here](http://www.soolstyle.com/2010/06/29/2d-lightning-continued/).
