@@ -23,9 +23,10 @@ package
 	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
-	import starling.extensions.defferedShading.DeferredShadingProperties;
+	import starling.extensions.defferedShading.MaterialProperties;
 	import starling.extensions.defferedShading.debug.DebugImage;
 	import starling.extensions.defferedShading.display.DeferredShadingContainer;
+	import starling.extensions.defferedShading.lights.AmbientLight;
 	import starling.extensions.defferedShading.lights.PointLight;
 	import starling.textures.Texture;
 	
@@ -40,13 +41,14 @@ package
 		public static const FLOOR_NORMAL:Class;
 		
 		private var controlledLight:PointLight;
+		private var ambientLight:AmbientLight;		
 		private var lights:Vector.<PointLight> = new Vector.<PointLight>();
 		private var lightPositions:Vector.<Point> = new Vector.<Point>();
 		private var lightRadiuses:Vector.<Number> = new Vector.<Number>();
 		private var lightVelocities:Vector.<Number> = new Vector.<Number>();
 		private var lightAngles:Vector.<Number> = new Vector.<Number>();
 		private var container:DeferredShadingContainer;
-		private var deferredShadingProps:DeferredShadingProperties;
+		private var deferredShadingProps:MaterialProperties;
 		
 		// RTs
 		
@@ -86,10 +88,10 @@ package
 			var groundDiffuse:Texture = Texture.fromBitmap(new FLOOR_DIFFUSE() as Bitmap);
 			var groundNormal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
 			
-			deferredShadingProps = new DeferredShadingProperties(groundNormal);
-			groundDiffuse.deferredRendererProperties = deferredShadingProps;
+			deferredShadingProps = new MaterialProperties(groundNormal);
+			groundDiffuse.materialProperties = deferredShadingProps;
 			
-			container.background.addChild(new Image(groundDiffuse));
+			container.addChild(new Image(groundDiffuse));
 			
 			// RT debug
 			
@@ -125,31 +127,37 @@ package
 			
 			// Generate some random moving lights and a controllable one
 			
-			var light:PointLight;
+			var pointLight:PointLight;
 			
 			for(var i:int = 0; i < 7; i++)
 			{
-				light = new PointLight(
+				pointLight = new PointLight(
 					Math.random() * 0xFF0000 + Math.random() * 0x00FF00 + Math.random() * 0x0000FF,
 					Math.random() + 1,
 					Math.random() * 500 + 100
 				);
 				
-				light.x = Math.random() * stage.stageWidth;
-				light.y = Math.random() * stage.stageHeight;
+				pointLight.x = Math.random() * stage.stageWidth;
+				pointLight.y = Math.random() * stage.stageHeight;
 				
-				lightPositions.push(new Point(light.x, light.y));
+				lightPositions.push(new Point(pointLight.x, pointLight.y));
 				lightRadiuses.push(Math.random() * 100 + 50);
 				lightVelocities.push(Math.random() * 15 + 30);
 				lightAngles.push(0);
 				
-				container.background.addChild(light);
-				container.addLight(light);
-				lights.push(light);
+				container.addChild(pointLight);
+				container.addLight(pointLight);
+				lights.push(pointLight);
 			}
 			
+			// Add ambient light
+			
+			ambientLight = new AmbientLight(0x333333, 0.0);
+			container.addChild(ambientLight);
+			container.addLight(ambientLight);
+			
 			controlledLight = new PointLight(0xFFFFFF, 1.0, 200);
-			container.background.addChild(controlledLight);
+			container.addChild(controlledLight);
 			container.addLight(controlledLight);
 			controlledLight.x = 0;
 			controlledLight.y = 200;
@@ -218,6 +226,7 @@ package
 			
 			var container:ScrollContainer = new ScrollContainer();
 			container.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
+			container.scrollBarDisplayMode = ScrollContainer.SCROLL_BAR_DISPLAY_MODE_FIXED;
 			var layout:VerticalLayout = new VerticalLayout();
 			var group:LayoutGroup;
 			var hLayout:HorizontalLayout = new HorizontalLayout();
@@ -227,7 +236,7 @@ package
 			layout.gap = 10;
 			layout.padding = 10;
 			container.layout = layout;
-			container.width = 400;
+			container.width = 410;
 			container.height = 300;
 			container.y = stage.stageHeight - container.height;
 			
@@ -310,6 +319,19 @@ package
 			container.addChild(group);
 			container.addChild(lightAttenuationSlider = getSlider(0, 50, 5));
 			bindSlider(label, lightAttenuationSlider, onLightAttenuationChange);
+			
+			// Set control defaults
+			onSelectedLightChange();
+			
+			// Ambient light amount
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('Ambient light amount:'));	
+			group.addChild(label = getLabel());
+			container.addChild(group);
+			container.addChild(slider = getSlider(0, 1.0, ambientLight.strength));
+			bindSlider(label, slider, onAmbientAmountChange);
 			
 			onSelectedLightChange();
 		}
@@ -413,6 +435,11 @@ package
 		private function onLightAttenuationChange(e:Event):void
 		{
 			selectedLight.attenuation = (e.target as Slider).value;
+		}
+		
+		private function onAmbientAmountChange(e:Event):void
+		{
+			ambientLight.strength = (e.target as Slider).value;
 		}
 	}
 }
