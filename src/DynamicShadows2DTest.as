@@ -40,6 +40,12 @@ package
 		[Embed (source="assets/floor_normal.jpg")]
 		public static const FLOOR_NORMAL:Class;
 		
+		[Embed (source="assets/face_diffuse.png")]
+		public static const FACE_DIFFUSE:Class;
+		
+		[Embed (source="assets/face_normal.png")]
+		public static const FACE_NORMAL:Class;
+		
 		private var controlledLight:PointLight;
 		private var ambientLight:AmbientLight;		
 		private var lights:Vector.<PointLight> = new Vector.<PointLight>();
@@ -78,20 +84,20 @@ package
 		}
 		
 		private function onAddedToStage(e:Event = null):void
-		{
-			var quad:Quad;
+		{			
+			var image:Image;
 			
 			// Add layers
 			
 			addChild(container = new DeferredShadingContainer());
 			
-			var groundDiffuse:Texture = Texture.fromBitmap(new FLOOR_DIFFUSE() as Bitmap);
-			var groundNormal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
+			var diffuse:Texture = Texture.fromBitmap(new FLOOR_DIFFUSE() as Bitmap);
+			var normal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
 			
-			deferredShadingProps = new MaterialProperties(groundNormal);
-			groundDiffuse.materialProperties = deferredShadingProps;
+			deferredShadingProps = new MaterialProperties(normal);
+			diffuse.materialProperties = deferredShadingProps;
 			
-			container.addChild(new Image(groundDiffuse));
+			container.addChild(image = new Image(diffuse));
 			
 			// RT debug
 			
@@ -99,31 +105,22 @@ package
 			rtContainer.addChild(debugRT1 = new DebugImage(container.diffuseRenderTarget, 200, 130));
 			rtContainer.addChild(debugRT2 = new DebugImage(container.normalRenderTarget, 200, 130));
 			rtContainer.addChild(debugRT3 = new DebugImage(container.depthRenderTarget, 200, 130));
+			debugRT3.showChannel = 0;
 			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRenderTarget, 200, 130));
 			debugRT1.x = debugRT2.x = debugRT3.x = debugRT4.x = stage.stageWidth - 200;
 			debugRT2.y = 130;			
 			debugRT3.y = 260;
 			debugRT4.y = 390;
 			
-			// Add quads that should cast shadows		
+			// Add some occluders
 			
-			/*quad = new Quad(140, 150, 0x400000);
-			quad.x = quad.y = 180;
-			quad.rotation = 45;
-			container.occluders.addChild(quad);
+			diffuse = Texture.fromBitmap(new FACE_DIFFUSE() as Bitmap);
+			normal = Texture.fromBitmap(new FACE_NORMAL() as Bitmap);
 			
-			quad = new Quad(100, 150, 0x400000);
-			quad.x = 600;
-			quad.y = 50;
-			quad.rotation = 0;
-			container.occluders.addChild(quad);
-
-			quad = new Quad(150, 100, 0x400000);
-			quad.alignPivot();
-			quad.x = 600;
-			quad.y = 450;
-			quad.rotation = -0.5;
-			container.occluders.addChild(quad);*/
+			var pp:MaterialProperties = new MaterialProperties(normal);
+			diffuse.materialProperties = pp;
+			
+			container.addChild(image = new Image(diffuse));	
 			
 			// Generate some random moving lights and a controllable one
 			
