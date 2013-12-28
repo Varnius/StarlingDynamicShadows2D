@@ -9,7 +9,7 @@ Deferred renderer currently supports:
 
 TODOs:
 
-* Ambient and cone lights.
+* Spotlights.
 * Dynamic 2D shadows.
 
 Deferred renderer is partially based on blog posts [here](http://www.catalinzima.com/xna/tutorials/deferred-rendering-in-xna/) and [here](http://www.soolstyle.com/2010/06/29/2d-lightning-continued/).
