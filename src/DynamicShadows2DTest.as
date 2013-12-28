@@ -3,6 +3,7 @@ package
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
+	import flash.ui.Keyboard;
 	import flash.utils.getTimer;
 	
 	import feathers.controls.Check;
@@ -18,10 +19,12 @@ package
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.MetalWorksMobileTheme;
 	
+	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.KeyboardEvent;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.extensions.defferedShading.MaterialProperties;
@@ -77,6 +80,8 @@ package
 		private var lightRadiusSlider:Slider;
 		private var lightAttenuationSlider:Slider;
 		private var lightStrengthSlider:Slider;
+		private var GUIContainer:ScrollContainer;
+		private var paused:Boolean = false;
 		
 		public function DynamicShadows2DTest()
 		{
@@ -109,12 +114,12 @@ package
 			// RT debug
 			
 			addChild(rtContainer = new Sprite());
-			rtContainer.addChild(debugRT1 = new DebugImage(container.diffuseRenderTarget, 200, 130));
-			rtContainer.addChild(debugRT2 = new DebugImage(container.normalRenderTarget, 200, 130));
-			rtContainer.addChild(debugRT3 = new DebugImage(container.depthRenderTarget, 200, 130));
+			rtContainer.addChild(debugRT1 = new DebugImage(container.diffuseRenderTarget, 220, 130));
+			rtContainer.addChild(debugRT2 = new DebugImage(container.normalRenderTarget, 220, 130));
+			rtContainer.addChild(debugRT3 = new DebugImage(container.depthRenderTarget, 220, 130));
 			debugRT3.showChannel = 0;
-			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRenderTarget, 200, 130));
-			debugRT1.x = debugRT2.x = debugRT3.x = debugRT4.x = stage.stageWidth - 200;
+			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRenderTarget, 220, 130));
+			debugRT1.x = debugRT2.x = debugRT3.x = debugRT4.x = stage.stageWidth - 220;
 			debugRT2.y = 130;			
 			debugRT3.y = 260;
 			debugRT4.y = 390;
@@ -180,7 +185,8 @@ package
 			
 			// GUI
 			
-			initGUI();			
+			initGUI();
+			stage.addEventListener(KeyboardEvent.KEY_UP, handleGUIVisibility);
 		}
 		
 		/*-----------------------------
@@ -191,10 +197,16 @@ package
 		
 		private function onTick(e:Event):void
 		{
-			var radians:Number;
 			var now:uint = getTimer();
-			var delta:Number = (now - earlier) / 1000;
+			var delta:Number = (now - earlier) / 1000;			
 			earlier = now;
+			
+			if(paused)
+			{
+				return;
+			}		
+			
+			var radians:Number;
 			
 			for(var i:int = 0; i < lights.length; i++)
 			{
@@ -223,12 +235,28 @@ package
 			controlledLight.y = touch.globalY;
 		}
 		
+		private function handleGUIVisibility(e:KeyboardEvent):void
+		{
+			if(e.keyCode == Keyboard.TAB)
+			{
+				GUIContainer.visible = !GUIContainer.visible;
+			}
+			else if(e.keyCode == Keyboard.P)
+			{
+				paused = !paused;
+			}
+			else if(e.keyCode == Keyboard.O)
+			{
+				Starling.current.showStats = !Starling.current.showStats; 
+			}
+		}
+		
 		/*-----------------------------
 		GUI
 		-----------------------------*/
 		
 		private function initGUI():void
-		{		
+		{	
 			new MetalWorksMobileTheme(null, false);
 			
 			var slider:Slider;
@@ -236,9 +264,9 @@ package
 			
 			// Container
 			
-			var container:ScrollContainer = new ScrollContainer();
-			container.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
-			container.scrollBarDisplayMode = ScrollContainer.SCROLL_BAR_DISPLAY_MODE_FIXED;
+			GUIContainer = new ScrollContainer();
+			GUIContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
+			GUIContainer.scrollBarDisplayMode = ScrollContainer.SCROLL_BAR_DISPLAY_MODE_FIXED;
 			var layout:VerticalLayout = new VerticalLayout();
 			var group:LayoutGroup;
 			var hLayout:HorizontalLayout = new HorizontalLayout();
@@ -247,16 +275,16 @@ package
 			hLayout.gap = 10;
 			layout.gap = 10;
 			layout.padding = 10;
-			container.layout = layout;
-			container.width = 410;
-			container.height = 300;
-			container.y = stage.stageHeight - container.height;
+			GUIContainer.layout = layout;
+			GUIContainer.width = 410;
+			GUIContainer.height = 300;
+			GUIContainer.y = stage.stageHeight - GUIContainer.height;
 			
-			var quad:Quad = new Quad(container.width, container.height, 0x000000);
+			var quad:Quad = new Quad(GUIContainer.width, GUIContainer.height, 0x000000);
 			quad.alpha = 0.85;
 			
-			container.backgroundSkin = quad;
-			addChild(container);		
+			GUIContainer.backgroundSkin = quad;
+			addChild(GUIContainer);		
 			
 			// Map visibility
 			
@@ -268,7 +296,7 @@ package
 			cb.isSelected = true;
 			cb.addEventListener(Event.CHANGE, onRTCBChange);
 			group.addChild(cb);
-			container.addChild(group);
+			GUIContainer.addChild(group);
 			
 			// Specular power
 			
@@ -276,8 +304,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Material specular power:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(slider = getSlider(0, 200, 15));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(slider = getSlider(0, 200, 15));
 			bindSlider(label, slider, onSpecularPowerChange);
 			
 			// Specular intensity
@@ -286,8 +314,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Material specular intensity:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(slider = getSlider(0, 5, 1));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(slider = getSlider(0, 5, 1));
 			bindSlider(label, slider, onSpecularIntensityChange);
 			
 			// Light selection
@@ -300,7 +328,7 @@ package
 			picker.labelFunction = lightLabelFunction;
 			picker.addEventListener(Event.CHANGE, onSelectedLightChange);
 			group.addChild(picker);
-			container.addChild(picker);
+			GUIContainer.addChild(picker);
 			
 			// Light radius
 			
@@ -308,8 +336,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Selected light radius:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(lightRadiusSlider = getSlider(0, 500, 15));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(lightRadiusSlider = getSlider(0, 500, 15));
 			bindSlider(label, lightRadiusSlider, onLightRadiusChange);
 			
 			// Light strength
@@ -318,8 +346,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Selected light strength:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(lightStrengthSlider = getSlider(0, 50, 5));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(lightStrengthSlider = getSlider(0, 50, 5));
 			bindSlider(label, lightStrengthSlider, onLightStrengthChange);
 			
 			// Light strength
@@ -328,8 +356,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Selected light attenuation:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(lightAttenuationSlider = getSlider(0, 50, 5));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(lightAttenuationSlider = getSlider(0, 50, 5));
 			bindSlider(label, lightAttenuationSlider, onLightAttenuationChange);
 			
 			// Set control defaults
@@ -341,8 +369,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Ambient light amount:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(slider = getSlider(0, 1.0, ambientLight.strength));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(slider = getSlider(0, 1.0, ambientLight.strength));
 			bindSlider(label, slider, onAmbientAmountChange);
 			
 			// Occluder depth
@@ -350,8 +378,8 @@ package
 			group.layout = hLayout;
 			group.addChild(getLabel('Occluder depth:'));	
 			group.addChild(label = getLabel());
-			container.addChild(group);
-			container.addChild(slider = getSlider(0, 1.0, 0.5));
+			GUIContainer.addChild(group);
+			GUIContainer.addChild(slider = getSlider(0, 1.0, 0.5));
 			bindSlider(label, slider, onOccluderDepthChange);
 			
 			onSelectedLightChange();
