@@ -1,6 +1,7 @@
 package
 {
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.utils.getTimer;
 	
@@ -55,6 +56,12 @@ package
 		private var lightAngles:Vector.<Number> = new Vector.<Number>();
 		private var container:DeferredShadingContainer;
 		private var deferredShadingProps:MaterialProperties;
+		
+		// Occluder
+		
+		private var occluderMatProps:MaterialProperties;
+		private var occluderDepthMap:BitmapData;
+		private var occluderDepthBD:BitmapData;
 		
 		// RTs
 		
@@ -117,10 +124,15 @@ package
 			diffuse = Texture.fromBitmap(new FACE_DIFFUSE() as Bitmap);
 			normal = Texture.fromBitmap(new FACE_NORMAL() as Bitmap);
 			
-			var pp:MaterialProperties = new MaterialProperties(normal);
-			diffuse.materialProperties = pp;
+			// ARGB color format
+					
+			occluderMatProps = new MaterialProperties(normal);			
+			diffuse.materialProperties = occluderMatProps;	
+			refreshOccluderDepth(0.5);
 			
-			container.addChild(image = new Image(diffuse));	
+			container.addChild(image = new Image(diffuse));
+			image.x = 300;
+			image.y = 150;
 			
 			// Generate some random moving lights and a controllable one
 			
@@ -153,7 +165,10 @@ package
 			container.addChild(ambientLight);
 			container.addLight(ambientLight);
 			
+			// Add controllable light
+			
 			controlledLight = new PointLight(0xFFFFFF, 1.0, 200);
+			controlledLight.castsShadows = true;
 			container.addChild(controlledLight);
 			container.addLight(controlledLight);
 			controlledLight.x = 0;
@@ -330,7 +345,37 @@ package
 			container.addChild(slider = getSlider(0, 1.0, ambientLight.strength));
 			bindSlider(label, slider, onAmbientAmountChange);
 			
+			// Occluder depth
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('Occluder depth:'));	
+			group.addChild(label = getLabel());
+			container.addChild(group);
+			container.addChild(slider = getSlider(0, 1.0, 0.5));
+			bindSlider(label, slider, onOccluderDepthChange);
+			
 			onSelectedLightChange();
+		}
+		
+		/*-----------------------------
+		Helpers
+		-----------------------------*/
+		
+		private function refreshOccluderDepth(depth:Number):void
+		{
+			if(occluderMatProps.depthMap)
+			{
+				occluderMatProps.depthMap.dispose();
+			}
+			
+			if(occluderDepthBD)
+			{
+				occluderDepthBD.dispose();
+			}
+			
+			occluderDepthBD = new BitmapData(16, 16, false, 0xFF000000 + 0xFFFFFF * depth);			
+			var depthMap:Texture = Texture.fromBitmapData(occluderDepthBD);	
+			occluderMatProps.depthMap = depthMap;
 		}
 		
 		/*-----------------------------
@@ -437,6 +482,11 @@ package
 		private function onAmbientAmountChange(e:Event):void
 		{
 			ambientLight.strength = (e.target as Slider).value;
+		}
+		
+		private function onOccluderDepthChange(e:Event):void
+		{
+			refreshOccluderDepth((e.target as Slider).value);
 		}
 	}
 }
