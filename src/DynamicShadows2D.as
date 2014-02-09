@@ -34,14 +34,16 @@ package
 		
 		private function onContextCreated(event:Event):void
 		{
+			// todo: remove from release
 			stage3D.context3D.enableErrorChecking = true;
-			stage3D.context3D.configureBackBuffer(stage.stageWidth, stage.stageHeight, 0, false);
+			stage3D.context3D.configureBackBuffer(stage.stageWidth, stage.stageHeight, 0, false); // ???
 			
 			var viewport:Rectangle = new Rectangle(0, 0, 1024, 600);
 			
 			_starling = new Starling(DynamicShadows2DTest, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.BASELINE_EXTENDED);			
 			_starling.stage.stageWidth  = stage.stageWidth;
 			_starling.stage.stageHeight = stage.stageHeight;
+			_starling.enableDepthAndStencil = false; // ???
 			_starling.enableErrorChecking = true;
 			_starling.showStats = true;
 			_starling.start();
