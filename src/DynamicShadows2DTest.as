@@ -132,28 +132,40 @@ package
 			image.y = 250;
 			image.scaleX = image.scaleY = 0.3;
 			
+			container.addChild(image = new Image(diffuse));
+			container.addOccluder(image);
+			image.x = 600;
+			image.y = 400;
+			image.scaleX = image.scaleY = 0.5;
+			
+			container.addChild(image = new Image(diffuse));
+			container.addOccluder(image);
+			image.x = 800;
+			image.y = 50;
+			image.scaleX = image.scaleY = 0.3;
+			
 			var qq:Quad;
 			
-			container.addChild(qq = new Quad(200, 200, 0xFFF000));
+			container.addChild(qq = new Quad(200, 1, 0xFFF000));
 			container.addOccluder(qq);
 			qq.x = 350;
 			qq.y = 50;
-			qq.scaleX = qq.scaleY = 0.4;
 			
 			// Generate some random moving lights and a controllable one
 			
 			var pointLight:PointLight;
 			
-			for(var i:int =8; i < 3; i++)
+			for(var i:int = 0; i < 10; i++)
 			{
 				pointLight = new PointLight(
 					Math.random() * 0xFF0000 + Math.random() * 0x00FF00 + Math.random() * 0x0000FF,
 					Math.random() + 1,
-					Math.random() * 500 + 100
+					Math.random() * 200 + 50
 				);
 				
 				pointLight.x = Math.random() * stage.stageWidth;
 				pointLight.y = Math.random() * stage.stageHeight;
+				pointLight.castsShadows = true;
 				
 				lightPositions.push(new Point(pointLight.x, pointLight.y));
 				lightRadiuses.push(Math.random() * 100 + 50);
@@ -179,7 +191,7 @@ package
 			container.addLight(controlledLight);
 			controlledLight.x = 0;
 			controlledLight.y = 200;
-			controlledLight.attenuation = 1.0
+			controlledLight.attenuation = 15.0
 			lights.push(controlledLight);
 			
 			stage.addEventListener(TouchEvent.TOUCH, onTouch);
@@ -190,12 +202,12 @@ package
 			addChild(rtContainer = new Sprite());
 			rtContainer.addChild(debugRT1 = new DebugImage(container.diffuseRT, 220, 130));
 			rtContainer.addChild(debugRT2 = new DebugImage(container.occludersRT, 220, 130));
-			//rtContainer.addChild(debugRT3 = new DebugImage(controlledLight.shadowMap, 220, 130));
-		//	debugRT3.showChannel = 0;
+			rtContainer.addChild(debugRT3 = new DebugImage(controlledLight.shadowMap, 220, 130));
+			debugRT3.showChannel = 0;
 			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRT, 220, 130));
-			debugRT1.x = debugRT2.x = /*debugRT3.x =*/ debugRT4.x = stage.stageWidth - 220;
+			debugRT1.x = debugRT2.x = debugRT3.x = debugRT4.x = stage.stageWidth - 220;
 			debugRT2.y = 130;			
-			//debugRT3.y = 260;
+			debugRT3.y = 260;
 			debugRT4.y = 390;
 			
 			// GUI
