@@ -5,11 +5,14 @@ This is a sample project that uses my deferred renderer for Starling. Needs [thi
 
 Deferred renderer currently supports:
 
-* Deferred point lights (done, but may need improvements)
+* Deferred point lights.
+* Dynamic 2D shadows.
 
 TODOs:
 
+* Optimize rendering - some passes can be removed.
 * Spotlights.
-* Dynamic 2D shadows.
 
 Deferred renderer is partially based on blog posts [here](http://www.catalinzima.com/xna/tutorials/deferred-rendering-in-xna/) and [here](http://www.soolstyle.com/2010/06/29/2d-lightning-continued/).
+
+
