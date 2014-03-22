@@ -160,7 +160,7 @@ package
 				pointLight = new PointLight(
 					Math.random() * 0xFF0000 + Math.random() * 0x00FF00 + Math.random() * 0x0000FF,
 					Math.random() + 1,
-					Math.random() * 200 + 50
+					Math.random() * 300 + 50
 				);
 				
 				pointLight.x = Math.random() * stage.stageWidth;
