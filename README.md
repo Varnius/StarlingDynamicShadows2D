@@ -15,4 +15,4 @@ TODOs:
 
 Deferred renderer is partially based on blog posts [here](http://www.catalinzima.com/xna/tutorials/deferred-rendering-in-xna/) and [here](http://www.soolstyle.com/2010/06/29/2d-lightning-continued/).
 
-
+<img src="http://nekobit.puslapiai.lt/screens/mrt.png" alt="" />
