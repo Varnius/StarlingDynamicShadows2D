@@ -99,16 +99,17 @@ package
 		{			
 			var image:Image;
 			
-			// Add layers
-			
-			addChild(container = new DeferredShadingContainer());
-			
 			var diffuse:Texture = Texture.fromBitmap(new FLOOR_DIFFUSE() as Bitmap);
 			var normal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
 			
 			deferredShadingProps = new MaterialProperties(normal);
 			diffuse.materialProperties = deferredShadingProps;
 			
+			addChild(new Image(diffuse));
+			
+			// Add layers
+			
+			addChild(container = new DeferredShadingContainer());		
 			container.addChild(image = new Image(diffuse));
 			
 			// Add some occluders
