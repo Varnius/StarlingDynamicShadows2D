@@ -1,7 +1,7 @@
 Starling deferred renderer sample project
 =========================================
 
-This is a sample project that uses my deferred renderer for Starling. Needs [this fork of Starling](https://github.com/Varnius/Starling-Framework) in order to work. Also requires both Flash Player/AIR 14+.
+This is a sample project that uses my deferred renderer for Starling. Needs [this fork of Starling](https://github.com/Varnius/Starling-Framework) in order to work. Also requires Flash Player/AIR 14+.
 
 Deferred renderer currently supports:
 
