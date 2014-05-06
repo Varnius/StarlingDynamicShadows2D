@@ -6,7 +6,7 @@ This is a sample project that uses my deferred renderer for Starling. Needs [thi
 Deferred renderer currently supports:
 
 * Deferred point lights.
-* Dynamic 2D shadows.
+* Dynamic pixel perfect 2D shadows.
 
 TODOs:
 
