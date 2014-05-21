@@ -105,8 +105,6 @@ package
 			deferredShadingProps = new MaterialProperties(normal);
 			diffuse.materialProperties = deferredShadingProps;
 			
-			addChild(new Image(diffuse));
-			
 			// Add layers
 			
 			addChild(container = new DeferredShadingContainer());		
@@ -147,10 +145,11 @@ package
 			
 			var qq:Quad;
 			
-			container.addChild(qq = new Quad(200, 1, 0xFFF000));
+			container.addChild(qq = new Quad(100, 100, 0xFFF000));
 			container.addOccluder(qq);
-			qq.x = 350;
-			qq.y = 50;
+			qq.x = 450;
+			qq.y = 350;
+			qq.rotation = 3.14 / 4;
 			
 			// Generate some random moving lights and a controllable one
 			
@@ -192,7 +191,7 @@ package
 			container.addLight(controlledLight);
 			controlledLight.x = 0;
 			controlledLight.y = 200;
-			controlledLight.attenuation = 15.0
+			controlledLight.attenuation = 15.0;
 			lights.push(controlledLight);
 			
 			stage.addEventListener(TouchEvent.TOUCH, onTouch);
@@ -202,7 +201,7 @@ package
 			
 			addChild(rtContainer = new Sprite());
 			rtContainer.addChild(debugRT1 = new DebugImage(container.diffuseRT, 220, 130));
-			rtContainer.addChild(debugRT2 = new DebugImage(container.occludersRT, 220, 130));
+			rtContainer.addChild(debugRT2 = new DebugImage(container.normalsRT, 220, 130));
 			rtContainer.addChild(debugRT3 = new DebugImage(controlledLight.shadowMap, 220, 130));
 			debugRT3.showChannel = 0;
 			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRT, 220, 130));
@@ -250,6 +249,8 @@ package
 			}
 		}
 		
+		private var tmp:Point = new Point();
+		
 		private function onTouch(e:TouchEvent):void
 		{
 			var touch:Touch = e.getTouch(this);
@@ -259,8 +260,11 @@ package
 				return;
 			}
 			
-			controlledLight.x = touch.globalX;
-			controlledLight.y = touch.globalY;
+			tmp.setTo(touch.globalX, touch.globalY);
+			controlledLight.parent.globalToLocal(tmp, tmp);
+			
+			controlledLight.x = tmp.x;
+			controlledLight.y = tmp.y;
 		}
 		
 		private function handleGUIVisibility(e:KeyboardEvent):void
@@ -285,7 +289,7 @@ package
 		
 		private function initGUI():void
 		{	
-			new MetalWorksMobileTheme(null, false);
+			new MetalWorksMobileTheme(false);
 			
 			var slider:Slider;
 			var label:Label;
