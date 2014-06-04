@@ -27,11 +27,11 @@ package
 	import starling.events.KeyboardEvent;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
-	import starling.extensions.defferedShading.MaterialProperties;
-	import starling.extensions.defferedShading.debug.DebugImage;
-	import starling.extensions.defferedShading.display.DeferredShadingContainer;
-	import starling.extensions.defferedShading.lights.AmbientLight;
-	import starling.extensions.defferedShading.lights.PointLight;
+	import starling.extensions.deferredShading.MaterialProperties;
+	import starling.extensions.deferredShading.debug.DebugImage;
+	import starling.extensions.deferredShading.display.DeferredShadingContainer;
+	import starling.extensions.deferredShading.lights.AmbientLight;
+	import starling.extensions.deferredShading.lights.PointLight;
 	import starling.textures.Texture;
 	
 	public class DynamicShadows2DTest extends Sprite
@@ -185,7 +185,7 @@ package
 			
 			// Add controllable light
 			
-			controlledLight = new PointLight(0xFFFFFF, 1.0, 200);
+			controlledLight = new PointLight(0xFFFFFF, 1.0, 500);
 			controlledLight.castsShadows = true;
 			container.addChild(controlledLight);
 			container.addLight(controlledLight);
