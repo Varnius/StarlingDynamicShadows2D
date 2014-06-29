@@ -13,12 +13,12 @@ package
 	import starling.core.Starling;
 	
 	[SWF(frameRate="60",width="1024",height="600")]
-	public class DynamicShadows2D extends Sprite
+	public class Sandbox extends Sprite
 	{
 		private var _starling:Starling;
 		private var	stage3D:Stage3D;
 		
-		public function DynamicShadows2D()
+		public function Sandbox()
 		{
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
@@ -29,7 +29,7 @@ package
 			
 			var viewport:Rectangle = new Rectangle(0, 0, 1024, 600);
 			
-			_starling = new Starling(DynamicShadows2DTest, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.STANDARD);	
+			_starling = new Starling(SandboxStarling, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.STANDARD);	
 			_starling.stage.stageWidth  = stage.stageWidth;
 			_starling.stage.stageHeight = stage.stageHeight;
 			_starling.enableErrorChecking = true;

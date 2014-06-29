@@ -32,9 +32,12 @@ package
 	import starling.extensions.deferredShading.display.DeferredShadingContainer;
 	import starling.extensions.deferredShading.lights.AmbientLight;
 	import starling.extensions.deferredShading.lights.PointLight;
+	import starling.extensions.post.PostEffectRenderer;
+	import starling.extensions.post.effects.Bloom;
+	import starling.extensions.post.effects.PostEffect;
 	import starling.textures.Texture;
 	
-	public class DynamicShadows2DTest extends Sprite
+	public class SandboxStarling extends Sprite
 	{
 		// Embedded assets
 		
@@ -81,9 +84,14 @@ package
 		private var lightAttenuationSlider:Slider;
 		private var lightStrengthSlider:Slider;
 		private var GUIContainer:ScrollContainer;
+		private var effectGUIContainer:ScrollContainer;
 		private var paused:Boolean = false;
 		
-		public function DynamicShadows2DTest()
+		// Effects
+		
+		private var bloom:Bloom;
+		
+		public function SandboxStarling()
 		{
 			if(!stage)
 			{
@@ -103,18 +111,24 @@ package
 			var normal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
 			
 			deferredShadingProps = new MaterialProperties(normal);
-			diffuse.materialProperties = deferredShadingProps;
+			diffuse.materialProperties = deferredShadingProps;		
 			
 			// Add layers
 			
-			addChild(container = new DeferredShadingContainer());		
+			bloom = new Bloom();			
+			
+			var pp:PostEffectRenderer = new PostEffectRenderer();
+			pp.effects = new <PostEffect>[bloom];
+			addChild(pp);
+			
+			pp.addChild(container = new DeferredShadingContainer());		
 			container.addChild(image = new Image(diffuse));
 			
 			// Add some occluders
 			
 			diffuse = Texture.fromBitmap(new FACE_DIFFUSE() as Bitmap);
 			normal = Texture.fromBitmap(new FACE_NORMAL() as Bitmap);
-					
+			
 			occluderMatProps = new MaterialProperties(normal);			
 			diffuse.materialProperties = occluderMatProps;	
 			refreshOccluderDepth(0.5);
@@ -205,6 +219,7 @@ package
 			rtContainer.addChild(debugRT3 = new DebugImage(controlledLight.shadowMap, 220, 130));
 			debugRT3.showChannel = 0;
 			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRT, 220, 130));
+			rtContainer.visible = false;
 			debugRT1.x = debugRT2.x = debugRT3.x = debugRT4.x = stage.stageWidth - 220;
 			debugRT2.y = 130;			
 			debugRT3.y = 260;
@@ -213,6 +228,7 @@ package
 			// GUI
 			
 			initGUI();
+			initEffectGUI();
 			stage.addEventListener(KeyboardEvent.KEY_UP, handleGUIVisibility);
 		}
 		
@@ -254,7 +270,7 @@ package
 		private function onTouch(e:TouchEvent):void
 		{
 			var touch:Touch = e.getTouch(this);
-
+			
 			if(!touch)
 			{
 				return;
@@ -271,7 +287,19 @@ package
 		{
 			if(e.keyCode == Keyboard.TAB)
 			{
-				GUIContainer.visible = !GUIContainer.visible;
+				if(GUIContainer.visible)
+				{
+					GUIContainer.visible = false;					
+				}
+				else if(effectGUIContainer.visible)
+				{
+					effectGUIContainer.visible = false;
+					GUIContainer.visible = true;
+				}
+				else
+				{
+					effectGUIContainer.visible = true;
+				}
 			}
 			else if(e.keyCode == Keyboard.P)
 			{
@@ -299,6 +327,8 @@ package
 			GUIContainer = new ScrollContainer();
 			GUIContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
 			GUIContainer.scrollBarDisplayMode = ScrollContainer.SCROLL_BAR_DISPLAY_MODE_FIXED;
+			GUIContainer.visible = true;
+			
 			var layout:VerticalLayout = new VerticalLayout();
 			var group:LayoutGroup;
 			var hLayout:HorizontalLayout = new HorizontalLayout();
@@ -318,6 +348,10 @@ package
 			GUIContainer.backgroundSkin = quad;
 			addChild(GUIContainer);		
 			
+			label = new Label();
+			label.text = 'Press TAB to switch settings';
+			GUIContainer.addChild(label);
+			
 			// Map visibility
 			
 			group = new LayoutGroup();
@@ -325,7 +359,7 @@ package
 			hLayout.verticalAlign = HorizontalLayout.VERTICAL_ALIGN_MIDDLE;
 			cb = new Check();
 			cb.label = 'Show intermediate RTs';
-			cb.isSelected = true;
+			cb.isSelected = false;
 			cb.addEventListener(Event.CHANGE, onRTCBChange);
 			group.addChild(cb);
 			GUIContainer.addChild(group);
@@ -415,6 +449,82 @@ package
 			bindSlider(label, slider, onOccluderDepthChange);
 			
 			onSelectedLightChange();
+		}
+		
+		private function initEffectGUI():void
+		{
+			var slider:Slider;
+			var label:Label;
+			
+			// Container
+			
+			effectGUIContainer = new ScrollContainer();
+			effectGUIContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
+			effectGUIContainer.scrollBarDisplayMode = ScrollContainer.SCROLL_BAR_DISPLAY_MODE_FIXED;
+			effectGUIContainer.visible = false;
+			
+			var layout:VerticalLayout = new VerticalLayout();
+			var group:LayoutGroup;
+			var hLayout:HorizontalLayout = new HorizontalLayout();
+			var cb:Check;
+			
+			hLayout.gap = 10;
+			layout.gap = 10;
+			layout.padding = 10;
+			effectGUIContainer.layout = layout;
+			effectGUIContainer.width = 410;
+			effectGUIContainer.height = 300;
+			effectGUIContainer.y = stage.stageHeight - GUIContainer.height;
+			
+			var quad:Quad = new Quad(effectGUIContainer.width, effectGUIContainer.height, 0x000000);
+			quad.alpha = 0.85;
+			
+			effectGUIContainer.backgroundSkin = quad;
+			addChild(effectGUIContainer);	
+			
+			label = new Label();
+			label.text = 'Press TAB to switch settings';
+			effectGUIContainer.addChild(label);
+			
+			// Bloom intensity
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('Bloom intensity:'));	
+			group.addChild(label = getLabel());
+			effectGUIContainer.addChild(group);
+			effectGUIContainer.addChild(slider = getSlider(0, 10, 4));
+			bindSlider(label, slider, onBloomIntensityChange);
+			
+			// Threshold
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('Bloom threshold:'));	
+			group.addChild(label = getLabel());
+			effectGUIContainer.addChild(group);
+			effectGUIContainer.addChild(slider = getSlider(0, 1, 0.15));
+			bindSlider(label, slider, onBloomThresholdChange);
+			
+			// BlurX
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('BlurX:'));	
+			group.addChild(label = getLabel());
+			effectGUIContainer.addChild(group);
+			effectGUIContainer.addChild(slider = getSlider(0, 5, 1.5));
+			bindSlider(label, slider, onBloomBlurXChange);	
+			
+			// BlurY
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('BlurY:'));	
+			group.addChild(label = getLabel());
+			effectGUIContainer.addChild(group);
+			effectGUIContainer.addChild(slider = getSlider(0, 5, 1.5));
+			bindSlider(label, slider, onBloomBlurYChange);
 		}
 		
 		/*-----------------------------
@@ -547,6 +657,30 @@ package
 		private function onOccluderDepthChange(e:Event):void
 		{
 			refreshOccluderDepth((e.target as Slider).value);
+		}
+		
+		/*-----------------------------
+		Effect GUI event callbacks
+		-----------------------------*/
+		
+		private function onBloomIntensityChange(e:Event):void
+		{
+			bloom.intensity = (e.target as Slider).value;
+		}
+		
+		private function onBloomBlurXChange(e:Event):void
+		{
+			bloom.blurX = (e.target as Slider).value;
+		}
+		
+		private function onBloomBlurYChange(e:Event):void
+		{
+			bloom.blurY = (e.target as Slider).value;
+		}
+		
+		private function onBloomThresholdChange(e:Event):void
+		{
+			bloom.threshold = (e.target as Slider).value;
 		}
 	}
 }
