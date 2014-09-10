@@ -12,7 +12,6 @@ Deferred renderer currently supports:
 
 TODOs:
 
-* Optimize rendering - some passes can be removed.
 * Spotlights.
 
 Deferred renderer is partially based on blog posts [here](http://www.catalinzima.com/xna/tutorials/deferred-rendering-in-xna/) and [here](http://www.soolstyle.com/2010/06/29/2d-lightning-continued/).
