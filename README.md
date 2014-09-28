@@ -3,6 +3,6 @@ Starling deferred renderer demo
 
 This is a sample project that uses my deferred renderer for Starling. Currently needs [this fork of Starling](https://github.com/Varnius/Starling-Framework) and [Starling Renderer Plus](https://github.com/Varnius/StarlingRendererPlus) library in order to work. Also requires Flash Player/AIR 14+. You can find more info about included features [here](https://github.com/Varnius/StarlingRendererPlus).
 
-<a href="http://nekobit.eu/demos/starling-deferred/Sandbox.html" target="_blank">Online Demo</a> (currently not working with Chrome PPAPI plugin, try it using ActiveX or NPAPI ones)
+<a href="http://nekobit.eu/demos/starling-deferred/Sandbox.html" target="_blank">Online Demo</a> (There may be some performance issues with Chrome PPAPI plugin.)
 
 <a href="http://nekobit.eu/demos/starling-deferred/Sandbox.html" target="_blank"><img src="http://nekobit.eu/screens/mrt.png" alt="" /></a>
