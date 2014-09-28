@@ -30,9 +30,9 @@ package
 	import starling.extensions.deferredShading.MaterialProperties;
 	import starling.extensions.deferredShading.debug.DebugImage;
 	import starling.extensions.deferredShading.display.DeferredShadingContainer;
-	import starling.extensions.deferredShading.lights.AmbientLight;
 	import starling.extensions.deferredShading.lights.PointLight;
 	import starling.extensions.post.PostEffectRenderer;
+	import starling.extensions.post.effects.AnamorphicFlares;
 	import starling.extensions.post.effects.Bloom;
 	import starling.extensions.post.effects.PostEffect;
 	import starling.textures.Texture;
@@ -53,8 +53,7 @@ package
 		[Embed (source="assets/face_normal.png")]
 		public static const FACE_NORMAL:Class;
 		
-		private var controlledLight:PointLight;
-		private var ambientLight:AmbientLight;		
+		private var controlledLight:PointLight;	
 		private var lights:Vector.<PointLight> = new Vector.<PointLight>();
 		private var lightPositions:Vector.<Point> = new Vector.<Point>();
 		private var lightRadiuses:Vector.<Number> = new Vector.<Number>();
@@ -75,7 +74,6 @@ package
 		private var debugRT1:DebugImage;
 		private var debugRT2:DebugImage;
 		private var debugRT3:DebugImage;
-		private var debugRT4:DebugImage;
 		
 		// GUI
 		
@@ -90,6 +88,7 @@ package
 		// Effects
 		
 		private var bloom:Bloom;
+		private var flares:AnamorphicFlares;
 		
 		public function SandboxStarling()
 		{
@@ -115,10 +114,15 @@ package
 			
 			// Add layers
 			
-			bloom = new Bloom();			
+			bloom = new Bloom();	
+			flares = new AnamorphicFlares();			
 			
 			var pp:PostEffectRenderer = new PostEffectRenderer();
-			pp.effects = new <PostEffect>[bloom];
+			bloom.intensity = 2.12;
+			bloom.threshold = 0.19;
+			flares.intensity = 2;
+			flares.threshold = 1.0;
+			pp.effects = new <PostEffect>[bloom, flares];
 			addChild(pp);
 			
 			pp.addChild(container = new DeferredShadingContainer());		
@@ -131,39 +135,18 @@ package
 			
 			occluderMatProps = new MaterialProperties(normal);			
 			diffuse.materialProperties = occluderMatProps;	
-			refreshOccluderDepth(0.5);
+			refreshOccluderDepth(0);
 			
 			container.addChild(image = new Image(diffuse));
 			container.addOccluder(image);
-			image.x = 300;
+			image.x = 200;
 			image.y = 150;
-			image.scaleX = image.scaleY = 0.2;
 			
 			container.addChild(image = new Image(diffuse));
 			container.addOccluder(image);
-			image.x = 450;
-			image.y = 250;
-			image.scaleX = image.scaleY = 0.3;
-			
-			container.addChild(image = new Image(diffuse));
-			container.addOccluder(image);
-			image.x = 600;
-			image.y = 400;
 			image.scaleX = image.scaleY = 0.5;
-			
-			container.addChild(image = new Image(diffuse));
-			container.addOccluder(image);
-			image.x = 800;
-			image.y = 50;
-			image.scaleX = image.scaleY = 0.3;
-			
-			var qq:Quad;
-			
-			container.addChild(qq = new Quad(100, 100, 0xFFF000));
-			container.addOccluder(qq);
-			qq.x = 450;
-			qq.y = 350;
-			qq.rotation = 3.14 / 4;
+			image.x = 700;
+			image.y = 300;
 			
 			// Generate some random moving lights and a controllable one
 			
@@ -191,12 +174,6 @@ package
 				lights.push(pointLight);
 			}
 			
-			// Add ambient light
-			
-			ambientLight = new AmbientLight(0x333333, 0.0);
-			container.addChild(ambientLight);
-			container.addLight(ambientLight);
-			
 			// Add controllable light
 			
 			controlledLight = new PointLight(0xFFFFFF, 1.0, 500);
@@ -218,18 +195,18 @@ package
 			rtContainer.addChild(debugRT2 = new DebugImage(container.normalsRT, 220, 130));
 			rtContainer.addChild(debugRT3 = new DebugImage(controlledLight.shadowMap, 220, 130));
 			debugRT3.showChannel = 0;
-			rtContainer.addChild(debugRT4 = new DebugImage(container.lightPassRT, 220, 130));
 			rtContainer.visible = false;
-			debugRT1.x = debugRT2.x = debugRT3.x = debugRT4.x = stage.stageWidth - 220;
+			debugRT1.x = debugRT2.x = debugRT3.x = stage.stageWidth - 220;
 			debugRT2.y = 130;			
 			debugRT3.y = 260;
-			debugRT4.y = 390;
 			
 			// GUI
 			
 			initGUI();
 			initEffectGUI();
 			stage.addEventListener(KeyboardEvent.KEY_UP, handleGUIVisibility);
+			effectGUIContainer.visible = false;
+			GUIContainer.visible = false;
 		}
 		
 		/*-----------------------------
@@ -285,21 +262,13 @@ package
 		
 		private function handleGUIVisibility(e:KeyboardEvent):void
 		{
-			if(e.keyCode == Keyboard.TAB)
+			if(e.keyCode == Keyboard.Q)
 			{
-				if(GUIContainer.visible)
-				{
-					GUIContainer.visible = false;					
-				}
-				else if(effectGUIContainer.visible)
-				{
-					effectGUIContainer.visible = false;
-					GUIContainer.visible = true;
-				}
-				else
-				{
-					effectGUIContainer.visible = true;
-				}
+				GUIContainer.visible = !GUIContainer.visible;
+			}
+			else if(e.keyCode == Keyboard.W)
+			{
+				effectGUIContainer.visible = !effectGUIContainer.visible;
 			}
 			else if(e.keyCode == Keyboard.P)
 			{
@@ -321,6 +290,12 @@ package
 			
 			var slider:Slider;
 			var label:Label;
+			
+			// Info text
+			
+			addChild(label = getLabel("Settings: 'Q' - Lights and materials, 'W' - PostFX"));
+			label.x = 60; 
+			label.y = 4;
 			
 			// Container
 			
@@ -348,10 +323,6 @@ package
 			GUIContainer.backgroundSkin = quad;
 			addChild(GUIContainer);		
 			
-			label = new Label();
-			label.text = 'Press TAB to switch settings';
-			GUIContainer.addChild(label);
-			
 			// Map visibility
 			
 			group = new LayoutGroup();
@@ -371,7 +342,7 @@ package
 			group.addChild(getLabel('Material specular power:'));	
 			group.addChild(label = getLabel());
 			GUIContainer.addChild(group);
-			GUIContainer.addChild(slider = getSlider(0, 200, 15));
+			GUIContainer.addChild(slider = getSlider(0, 200, MaterialProperties.DEFAULT_SPECULAR_POWER));
 			bindSlider(label, slider, onSpecularPowerChange);
 			
 			// Specular intensity
@@ -381,7 +352,7 @@ package
 			group.addChild(getLabel('Material specular intensity:'));	
 			group.addChild(label = getLabel());
 			GUIContainer.addChild(group);
-			GUIContainer.addChild(slider = getSlider(0, 5, 1));
+			GUIContainer.addChild(slider = getSlider(0, 5, MaterialProperties.DEFAULT_SPECULAR_INTENSITY));
 			bindSlider(label, slider, onSpecularIntensityChange);
 			
 			// Light selection
@@ -429,23 +400,13 @@ package
 			// Set control defaults
 			onSelectedLightChange();
 			
-			// Ambient light amount
-			
-			group = new LayoutGroup();
-			group.layout = hLayout;
-			group.addChild(getLabel('Ambient light amount:'));	
-			group.addChild(label = getLabel());
-			GUIContainer.addChild(group);
-			GUIContainer.addChild(slider = getSlider(0, 1.0, ambientLight.strength));
-			bindSlider(label, slider, onAmbientAmountChange);
-			
 			// Occluder depth
 			group = new LayoutGroup();
 			group.layout = hLayout;
 			group.addChild(getLabel('Occluder depth:'));	
 			group.addChild(label = getLabel());
 			GUIContainer.addChild(group);
-			GUIContainer.addChild(slider = getSlider(0, 1.0, 0.5));
+			GUIContainer.addChild(slider = getSlider(0, 1.0, 0));
 			bindSlider(label, slider, onOccluderDepthChange);
 			
 			onSelectedLightChange();
@@ -461,7 +422,6 @@ package
 			effectGUIContainer = new ScrollContainer();
 			effectGUIContainer.horizontalScrollPolicy = ScrollContainer.SCROLL_POLICY_OFF;
 			effectGUIContainer.scrollBarDisplayMode = ScrollContainer.SCROLL_BAR_DISPLAY_MODE_FIXED;
-			effectGUIContainer.visible = false;
 			
 			var layout:VerticalLayout = new VerticalLayout();
 			var group:LayoutGroup;
@@ -472,8 +432,9 @@ package
 			layout.gap = 10;
 			layout.padding = 10;
 			effectGUIContainer.layout = layout;
-			effectGUIContainer.width = 410;
+			effectGUIContainer.width = 410;			
 			effectGUIContainer.height = 300;
+			effectGUIContainer.x = 425;
 			effectGUIContainer.y = stage.stageHeight - GUIContainer.height;
 			
 			var quad:Quad = new Quad(effectGUIContainer.width, effectGUIContainer.height, 0x000000);
@@ -483,17 +444,23 @@ package
 			addChild(effectGUIContainer);	
 			
 			label = new Label();
-			label.text = 'Press TAB to switch settings';
+			label.text = 'Bloom settings:';
 			effectGUIContainer.addChild(label);
+			
+			effectGUIContainer.addChild(cb = new Check());
+			cb.label = 'Enable bloom';
+			cb.isSelected = bloom.enabled;
+			cb.addEventListener(Event.CHANGE, onBloomCBChange);
 			
 			// Bloom intensity
 			
 			group = new LayoutGroup();
 			group.layout = hLayout;
-			group.addChild(getLabel('Bloom intensity:'));	
+			group.addChild(getLabel('Intensity:'));	
 			group.addChild(label = getLabel());
 			effectGUIContainer.addChild(group);
-			effectGUIContainer.addChild(slider = getSlider(0, 10, 4));
+			effectGUIContainer.addChild(slider = getSlider(0, 7, 1));
+			bloom.intensity = 1	;
 			bindSlider(label, slider, onBloomIntensityChange);
 			
 			// Threshold
@@ -525,6 +492,35 @@ package
 			effectGUIContainer.addChild(group);
 			effectGUIContainer.addChild(slider = getSlider(0, 5, 1.5));
 			bindSlider(label, slider, onBloomBlurYChange);
+			
+			// Flares
+			
+			label = new Label();
+			label.text = 'Flares settings:';
+			effectGUIContainer.addChild(label);
+			
+			effectGUIContainer.addChild(cb = new Check());
+			cb.label = 'Enable flares';
+			cb.isSelected = flares.enabled;
+			cb.addEventListener(Event.CHANGE, onFlaresCBChange);
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('Threshold:'));	
+			group.addChild(label = getLabel());
+			effectGUIContainer.addChild(group);
+			effectGUIContainer.addChild(slider = getSlider(0, 1, 0.5));
+			flares.threshold = 0.5;
+			bindSlider(label, slider, onFlaresThresholdChange);
+			
+			group = new LayoutGroup();
+			group.layout = hLayout;
+			group.addChild(getLabel('Intensity:'));	
+			group.addChild(label = getLabel());
+			effectGUIContainer.addChild(group);
+			effectGUIContainer.addChild(slider = getSlider(0, 7, 6));
+			flares.intensity = 6;
+			bindSlider(label, slider, onFlaresIntensityChange);
 		}
 		
 		/*-----------------------------
@@ -649,11 +645,6 @@ package
 			selectedLight.attenuation = (e.target as Slider).value;
 		}
 		
-		private function onAmbientAmountChange(e:Event):void
-		{
-			ambientLight.strength = (e.target as Slider).value;
-		}
-		
 		private function onOccluderDepthChange(e:Event):void
 		{
 			refreshOccluderDepth((e.target as Slider).value);
@@ -666,7 +657,7 @@ package
 		private function onBloomIntensityChange(e:Event):void
 		{
 			bloom.intensity = (e.target as Slider).value;
-		}
+		}	
 		
 		private function onBloomBlurXChange(e:Event):void
 		{
@@ -681,6 +672,26 @@ package
 		private function onBloomThresholdChange(e:Event):void
 		{
 			bloom.threshold = (e.target as Slider).value;
+		}
+		
+		private function onFlaresThresholdChange(e:Event):void
+		{
+			flares.threshold = (e.target as Slider).value;
+		}
+		
+		private function onFlaresIntensityChange(e:Event):void
+		{
+			flares.intensity = (e.target as Slider).value;
+		}
+		
+		private function onBloomCBChange(e:Event):void
+		{
+			bloom.enabled = (e.target as Check).isSelected;
+		}
+		
+		private function onFlaresCBChange(e:Event):void
+		{
+			flares.enabled = (e.target as Check).isSelected;
 		}
 	}
 }

@@ -22,7 +22,7 @@
         <key>dataFormat</key>
         <string>sparrow</string>
         <key>textureFileName</key>
-        <filename>metalworks.png</filename>
+        <filename>metalworks_mobile.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>ditherType</key>
@@ -111,7 +111,7 @@
             <enum type="AndEngine::MagFilter">MagLinear</enum>
         </struct>
         <key>dataFileName</key>
-        <filename>metalworks.xml</filename>
+        <filename>metalworks_mobile.xml</filename>
         <key>mainExtension</key>
         <string></string>
         <key>forceIdenticalLayout</key>
