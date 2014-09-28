@@ -5,4 +5,4 @@ This is a sample project that uses my deferred renderer for Starling. Currently 
 
 <a href="http://nekobit.eu/demos/starling-deferred/Sandbox.html" target="_blank">Online Demo</a> (There may be some performance issues with Chrome PPAPI plugin.)
 
-<a href="http://nekobit.eu/demos/starling-deferred/Sandbox.html" target="_blank"><img src="http://nekobit.eu/screens/mrt.png" alt="" /></a>
+<a href="http://nekobit.eu/demos/starling-deferred/Sandbox.html" target="_blank"><img src="http://nekobit.eu/screens/mrt.jpg" alt="" /></a>
