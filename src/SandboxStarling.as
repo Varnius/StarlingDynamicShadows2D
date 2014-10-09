@@ -134,7 +134,6 @@ package
 			normal = Texture.fromBitmap(new FACE_NORMAL() as Bitmap);
 			
 			occluderMaterial = new Material(diffuse, normal);	
-			occluderMaterial.id = 'ass'
 			refreshOccluderDepth(0);
 			
 			container.addChild(image = new Image(occluderMaterial));
