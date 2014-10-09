@@ -27,9 +27,10 @@ package
 	import starling.events.KeyboardEvent;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
-	import starling.extensions.deferredShading.MaterialProperties;
+	import starling.extensions.deferredShading.Material;
 	import starling.extensions.deferredShading.debug.DebugImage;
 	import starling.extensions.deferredShading.display.DeferredShadingContainer;
+	import starling.extensions.deferredShading.lights.Light;
 	import starling.extensions.deferredShading.lights.PointLight;
 	import starling.extensions.post.PostEffectRenderer;
 	import starling.extensions.post.effects.AnamorphicFlares;
@@ -60,11 +61,11 @@ package
 		private var lightVelocities:Vector.<Number> = new Vector.<Number>();
 		private var lightAngles:Vector.<Number> = new Vector.<Number>();
 		private var container:DeferredShadingContainer;
-		private var deferredShadingProps:MaterialProperties;
+		private var material:Material;
+		private var occluderMaterial:Material;
 		
 		// Occluder
 		
-		private var occluderMatProps:MaterialProperties;
 		private var occluderDepthMap:BitmapData;
 		private var occluderDepthBD:BitmapData;
 		
@@ -109,8 +110,7 @@ package
 			var diffuse:Texture = Texture.fromBitmap(new FLOOR_DIFFUSE() as Bitmap);
 			var normal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
 			
-			deferredShadingProps = new MaterialProperties(normal);
-			diffuse.materialProperties = deferredShadingProps;		
+			material = new Material(diffuse, normal);	
 			
 			// Add layers
 			
@@ -126,27 +126,34 @@ package
 			addChild(pp);
 			
 			pp.addChild(container = new DeferredShadingContainer());		
-			container.addChild(image = new Image(diffuse));
+			container.addChild(image = new Image(material));
 			
 			// Add some occluders
 			
 			diffuse = Texture.fromBitmap(new FACE_DIFFUSE() as Bitmap);
 			normal = Texture.fromBitmap(new FACE_NORMAL() as Bitmap);
 			
-			occluderMatProps = new MaterialProperties(normal);			
-			diffuse.materialProperties = occluderMatProps;	
+			occluderMaterial = new Material(diffuse, normal);	
+			occluderMaterial.id = 'ass'
 			refreshOccluderDepth(0);
 			
-			container.addChild(image = new Image(diffuse));
+			container.addChild(image = new Image(occluderMaterial));
 			container.addOccluder(image);
 			image.x = 200;
 			image.y = 150;
 			
-			container.addChild(image = new Image(diffuse));
+			container.addChild(image = new Image(occluderMaterial));
 			container.addOccluder(image);
 			image.scaleX = image.scaleY = 0.5;
 			image.x = 700;
 			image.y = 300;
+			
+			var q:Quad = new Quad(80, 80, 0xF0F0FF);
+			container.addOccluder(q);
+			q.x = 450;
+			q.y = 400;
+			q.rotation = Math.PI / 4;
+			container.addChild(q);
 			
 			// Generate some random moving lights and a controllable one
 			
@@ -310,7 +317,7 @@ package
 			var cb:Check;
 			
 			hLayout.gap = 10;
-			layout.gap = 10;
+			layout.gap = 15;
 			layout.padding = 10;
 			GUIContainer.layout = layout;
 			GUIContainer.width = 410;
@@ -325,15 +332,19 @@ package
 			
 			// Map visibility
 			
-			group = new LayoutGroup();
-			group.layout = hLayout;
-			hLayout.verticalAlign = HorizontalLayout.VERTICAL_ALIGN_MIDDLE;
 			cb = new Check();
 			cb.label = 'Show intermediate RTs';
 			cb.isSelected = false;
 			cb.addEventListener(Event.CHANGE, onRTCBChange);
-			group.addChild(cb);
-			GUIContainer.addChild(group);
+			GUIContainer.addChild(cb);
+			
+			// Shadow visibility
+			
+			cb = new Check();
+			cb.label = 'Enable shadows';
+			cb.isSelected = true;
+			cb.addEventListener(Event.CHANGE, onShadowsCBChange);
+			GUIContainer.addChild(cb);
 			
 			// Specular power
 			
@@ -342,7 +353,7 @@ package
 			group.addChild(getLabel('Material specular power:'));	
 			group.addChild(label = getLabel());
 			GUIContainer.addChild(group);
-			GUIContainer.addChild(slider = getSlider(0, 200, MaterialProperties.DEFAULT_SPECULAR_POWER));
+			GUIContainer.addChild(slider = getSlider(0, 200, Material.DEFAULT_SPECULAR_POWER));
 			bindSlider(label, slider, onSpecularPowerChange);
 			
 			// Specular intensity
@@ -352,7 +363,7 @@ package
 			group.addChild(getLabel('Material specular intensity:'));	
 			group.addChild(label = getLabel());
 			GUIContainer.addChild(group);
-			GUIContainer.addChild(slider = getSlider(0, 5, MaterialProperties.DEFAULT_SPECULAR_INTENSITY));
+			GUIContainer.addChild(slider = getSlider(0, 5, Material.DEFAULT_SPECULAR_INTENSITY));
 			bindSlider(label, slider, onSpecularIntensityChange);
 			
 			// Light selection
@@ -529,9 +540,9 @@ package
 		
 		private function refreshOccluderDepth(depth:Number):void
 		{
-			if(occluderMatProps.depthMap)
+			if(occluderMaterial.depth)
 			{
-				occluderMatProps.depthMap.dispose();
+				occluderMaterial.depth.dispose();
 			}
 			
 			if(occluderDepthBD)
@@ -541,7 +552,7 @@ package
 			
 			occluderDepthBD = new BitmapData(16, 16, false, 0xFF000000 + 0xFFFFFF * depth);			
 			var depthMap:Texture = Texture.fromBitmapData(occluderDepthBD);	
-			occluderMatProps.depthMap = depthMap;
+			occluderMaterial.depth = depthMap;
 		}
 		
 		/*-----------------------------
@@ -607,17 +618,29 @@ package
 		
 		private function onSpecularPowerChange(e:Event):void
 		{
-			deferredShadingProps.specularPower = (e.target as Slider).value;
+			material.specularPower = (e.target as Slider).value;
 		}
 		
 		private function onSpecularIntensityChange(e:Event):void
 		{
-			deferredShadingProps.specularIntensity = (e.target as Slider).value;
+			material.specularIntensity = (e.target as Slider).value;
 		}
 		
 		private function onRTCBChange(e:Event):void
 		{
 			rtContainer.visible = (e.target as Check).isSelected;
+		}
+		
+		private function onShadowsCBChange(e:Event):void
+		{
+			var checked:Boolean = (e.target as Check).isSelected;
+			
+			for each(var l:Light in lights)
+			{
+				l.castsShadows = checked;
+			}			
+	
+			debugRT3.mTexture = checked ? controlledLight.shadowMap : null;			
 		}
 		
 		private var selectedLight:PointLight;

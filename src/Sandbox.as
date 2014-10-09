@@ -11,6 +11,7 @@ package
 	import flash.geom.Rectangle;
 	
 	import starling.core.Starling;
+	import starling.extensions.deferredShading.display.QuadBatchPlus;
 	
 	[SWF(frameRate="60",width="1024",height="600")]
 	public class Sandbox extends Sprite
@@ -29,7 +30,7 @@ package
 			
 			var viewport:Rectangle = new Rectangle(0, 0, 1024, 600);
 			
-			_starling = new Starling(SandboxStarling, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.STANDARD);	
+			_starling = new Starling(SandboxStarling, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.STANDARD, QuadBatchPlus);	
 			_starling.stage.stageWidth  = stage.stageWidth;
 			_starling.stage.stageHeight = stage.stageHeight;
 			_starling.enableErrorChecking = true;
