@@ -2,6 +2,7 @@ package
 {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	import flash.utils.getTimer;
@@ -30,8 +31,11 @@ package
 	import starling.extensions.deferredShading.Material;
 	import starling.extensions.deferredShading.debug.DebugImage;
 	import starling.extensions.deferredShading.display.DeferredShadingContainer;
+	import starling.extensions.deferredShading.interfaces.IAreaLight;
+	import starling.extensions.deferredShading.interfaces.IShadowMappedLight;
 	import starling.extensions.deferredShading.lights.Light;
 	import starling.extensions.deferredShading.lights.PointLight;
+	import starling.extensions.deferredShading.lights.SpotLight;
 	import starling.extensions.post.PostEffectRenderer;
 	import starling.extensions.post.effects.AnamorphicFlares;
 	import starling.extensions.post.effects.Bloom;
@@ -54,8 +58,8 @@ package
 		[Embed (source="assets/face_normal.png")]
 		public static const FACE_NORMAL:Class;
 		
-		private var controlledLight:PointLight;	
-		private var lights:Vector.<PointLight> = new Vector.<PointLight>();
+		private var controlledLight:IAreaLight;	
+		private var lights:Vector.<Light> = new Vector.<Light>();
 		private var lightPositions:Vector.<Point> = new Vector.<Point>();
 		private var lightRadiuses:Vector.<Number> = new Vector.<Number>();
 		private var lightVelocities:Vector.<Number> = new Vector.<Number>();
@@ -127,7 +131,10 @@ package
 			
 			pp.addChild(container = new DeferredShadingContainer());		
 			container.addChild(image = new Image(material));
-			
+			//container.scaleX = container.scaleY = 0.5;
+			//container.pivotX = container.width / 2;
+			//container.pivotY = container.height / 2
+			//container.rotation = 1;
 			// Add some occluders
 			
 			diffuse = Texture.fromBitmap(new FACE_DIFFUSE() as Bitmap);
@@ -156,40 +163,61 @@ package
 			
 			// Generate some random moving lights and a controllable one
 			
-			var pointLight:PointLight;
+			var light:Light;
 			
 			for(var i:int = 0; i < 10; i++)
 			{
-				pointLight = new PointLight(
-					Math.random() * 0xFF0000 + Math.random() * 0x00FF00 + Math.random() * 0x0000FF,
-					Math.random() + 1,
-					Math.random() * 300 + 50
-				);
+				if(Math.random() < 0.5)
+				{
+					light = new SpotLight(
+						Math.random() * 0xFF0000 + Math.random() * 0x00FF00 + Math.random() * 0x0000FF,
+						Math.random() + 1,
+						Math.random() * 300 + 50
+					);
+					
+					(light as SpotLight).angle = Math.PI * Math.random();
+				}
+				else
+				{
+					light = new PointLight(
+						Math.random() * 0xFF0000 + Math.random() * 0x00FF00 + Math.random() * 0x0000FF,
+						Math.random() + 1,
+						Math.random() * 300 + 50
+					);
+				}			
 				
-				pointLight.x = Math.random() * stage.stageWidth;
-				pointLight.y = Math.random() * stage.stageHeight;
-				pointLight.castsShadows = true;
+				light.x = Math.random() * stage.stageWidth;
+				light.y = Math.random() * stage.stageHeight;
+				(light as IAreaLight).castsShadows = true;
 				
-				lightPositions.push(new Point(pointLight.x, pointLight.y));
+				lightPositions.push(new Point(light.x, light.y));
 				lightRadiuses.push(Math.random() * 100 + 50);
 				lightVelocities.push(Math.random() * 15 + 30);
 				lightAngles.push(0);
 				
-				container.addChild(pointLight);
-				container.addLight(pointLight);
-				lights.push(pointLight);
+				container.addChild(light);
+				container.addLight(light);
+				lights.push(light);
 			}
 			
 			// Add controllable light
 			
-			controlledLight = new PointLight(0xFFFFFF, 1.0, 500);
-			controlledLight.castsShadows = true;
-			container.addChild(controlledLight);
-			container.addLight(controlledLight);
-			controlledLight.x = 0;
-			controlledLight.y = 200;
-			controlledLight.attenuation = 15.0;
-			lights.push(controlledLight);
+			var p:SpotLight = new SpotLight(0xFFFFFF, 1.0, 500);
+			p.castsShadows = true;
+			p.angle = Math.PI / 2;
+			container.addChild(p);
+			container.addLight(p);
+			p.attenuation = 15.0;
+			lights.push(p);
+			
+			controlledLight = p;
+			
+			Starling.current.nativeStage.addEventListener(MouseEvent.MOUSE_WHEEL,
+				function(e:MouseEvent):void
+				{
+					(controlledLight as SpotLight).rotation += e.delta / 50;
+				}
+			);
 			
 			stage.addEventListener(TouchEvent.TOUCH, onTouch);
 			stage.addEventListener(Event.ENTER_FRAME, onTick);
@@ -199,7 +227,7 @@ package
 			addChild(rtContainer = new Sprite());
 			rtContainer.addChild(debugRT1 = new DebugImage(container.diffuseRT, 220, 130));
 			rtContainer.addChild(debugRT2 = new DebugImage(container.normalsRT, 220, 130));
-			rtContainer.addChild(debugRT3 = new DebugImage(controlledLight.shadowMap, 220, 130));
+			rtContainer.addChild(debugRT3 = new DebugImage(p.shadowMap, 220, 130));
 			debugRT3.showChannel = 0;
 			rtContainer.visible = false;
 			debugRT1.x = debugRT2.x = debugRT3.x = stage.stageWidth - 220;
@@ -241,6 +269,7 @@ package
 					continue;
 				}
 				
+				lights[i].rotation += 0.01;
 				lightAngles[i] += lightVelocities[i] * delta;
 				radians = (lightAngles[i] / 180) * Math.PI;
 				lights[i].x = lightPositions[i].x + Math.cos(radians) * lightRadiuses[i];
@@ -259,11 +288,13 @@ package
 				return;
 			}
 			
-			tmp.setTo(touch.globalX, touch.globalY);
-			controlledLight.parent.globalToLocal(tmp, tmp);
+			var l:Light = controlledLight as Light;
 			
-			controlledLight.x = tmp.x;
-			controlledLight.y = tmp.y;
+			tmp.setTo(touch.globalX, touch.globalY);
+			l.parent.globalToLocal(tmp, tmp);
+			
+			l.x = tmp.x;
+			l.y = tmp.y;
 		}
 		
 		private function handleGUIVisibility(e:KeyboardEvent):void
@@ -601,7 +632,7 @@ package
 		
 		private function rendererLightLabelFunction(o:Object):String
 		{
-			return 'Light #' + lights.indexOf(o as PointLight);
+			return 'Light #' + lights.indexOf(o as Light);
 		};
 		
 		private function lightRendererFactory():IListItemRenderer
@@ -636,19 +667,19 @@ package
 			
 			for each(var l:Light in lights)
 			{
-				l.castsShadows = checked;
+				if(l is IShadowMappedLight) (l as IShadowMappedLight).castsShadows = checked;
 			}			
 	
-			debugRT3.mTexture = checked ? controlledLight.shadowMap : null;			
+			debugRT3.mTexture = checked ? (controlledLight as IShadowMappedLight).shadowMap : null;			
 		}
 		
-		private var selectedLight:PointLight;
+		private var selectedLight:IAreaLight;
 		
 		private function onSelectedLightChange(e:Event = null):void
 		{
-			selectedLight = picker.selectedItem as PointLight;
+			selectedLight = picker.selectedItem as IAreaLight;
 			lightRadiusSlider.value = selectedLight.radius;
-			lightStrengthSlider.value = selectedLight.strength;
+			lightStrengthSlider.value = (selectedLight as Light).strength;
 			lightAttenuationSlider.value = selectedLight.attenuation;
 		}
 		
@@ -659,7 +690,7 @@ package
 		
 		private function onLightStrengthChange(e:Event):void
 		{
-			selectedLight.strength = (e.target as Slider).value;
+			(selectedLight as Light).strength = (e.target as Slider).value;
 		}
 		
 		private function onLightAttenuationChange(e:Event):void
