@@ -627,7 +627,7 @@ package
 		
 		private function lightLabelFunction(o:Object):String
 		{
-			return 'Change properties for light: #' + lights.indexOf(o as PointLight);
+			return 'Change properties for light: #' + lights.indexOf(o as Light);
 		};
 		
 		private function rendererLightLabelFunction(o:Object):String
