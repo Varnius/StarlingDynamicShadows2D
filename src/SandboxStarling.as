@@ -21,6 +21,7 @@ package
 	import feathers.themes.MetalWorksMobileTheme;
 	
 	import starling.core.Starling;
+	import starling.display.Canvas;
 	import starling.display.Image;
 	import starling.display.Quad;
 	import starling.display.Sprite;
@@ -57,6 +58,13 @@ package
 		
 		[Embed (source="assets/face_normal.png")]
 		public static const FACE_NORMAL:Class;
+		
+		
+		[Embed (source="assets/character-with-si-logo.png")]
+		public static const CHAR_DIFF:Class;
+		
+		[Embed (source="assets/character-with-si-logo_n.png")]
+		public static const CHAR_NORMALS:Class;
 		
 		private var controlledLight:IAreaLight;	
 		private var lights:Vector.<Light> = new Vector.<Light>();
@@ -114,7 +122,7 @@ package
 			var diffuse:Texture = Texture.fromBitmap(new FLOOR_DIFFUSE() as Bitmap);
 			var normal:Texture = Texture.fromBitmap(new FLOOR_NORMAL() as Bitmap);
 			
-			material = new Material(diffuse, normal);	
+			material = new Material(diffuse, normal);
 			
 			// Add layers
 			
@@ -131,11 +139,21 @@ package
 			
 			pp.addChild(container = new DeferredShadingContainer());		
 			container.addChild(image = new Image(material));
-			//container.scaleX = container.scaleY = 0.5;
-			//container.pivotX = container.width / 2;
-			//container.pivotY = container.height / 2
-			//container.rotation = 1;
+	
 			// Add some occluders
+			
+			var mat:Material = new Material(Texture.fromEmbeddedAsset(CHAR_DIFF), Texture.fromEmbeddedAsset(CHAR_NORMALS));
+			
+			image = new Image(mat);
+			container.addChild(image);
+			image.x = 550;
+			image.y = 150;
+			
+			
+			var mask:Canvas = new Canvas();
+			mask.drawRectangle(0,0,50,30);
+			
+			//container.mask = mask;
 			
 			diffuse = Texture.fromBitmap(new FACE_DIFFUSE() as Bitmap);
 			normal = Texture.fromBitmap(new FACE_NORMAL() as Bitmap);
@@ -196,28 +214,18 @@ package
 				lightAngles.push(0);
 				
 				container.addChild(light);
-				container.addLight(light);
 				lights.push(light);
 			}
 			
 			// Add controllable light
 			
-			var p:SpotLight = new SpotLight(0xFFFFFF, 1.0, 500);
+			var p:PointLight = new PointLight(0xFFFFFF, 1, 500,1);
 			p.castsShadows = true;
-			p.angle = Math.PI / 2;
 			container.addChild(p);
-			container.addLight(p);
 			p.attenuation = 15.0;
 			lights.push(p);
 			
 			controlledLight = p;
-			
-			Starling.current.nativeStage.addEventListener(MouseEvent.MOUSE_WHEEL,
-				function(e:MouseEvent):void
-				{
-					(controlledLight as SpotLight).rotation += e.delta / 50;
-				}
-			);
 			
 			stage.addEventListener(TouchEvent.TOUCH, onTouch);
 			stage.addEventListener(Event.ENTER_FRAME, onTick);

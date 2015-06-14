@@ -33,7 +33,7 @@ package
 			_starling = new Starling(SandboxStarling, stage, viewport, stage3D, Context3DRenderMode.AUTO, Context3DProfile.STANDARD, QuadBatchPlus);	
 			_starling.stage.stageWidth  = stage.stageWidth;
 			_starling.stage.stageHeight = stage.stageHeight;
-			_starling.enableErrorChecking = true;
+			_starling.enableErrorChecking = false//true;
 			_starling.showStats = true;
 			_starling.start();
 		}
