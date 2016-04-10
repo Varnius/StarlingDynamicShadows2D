@@ -1,20 +1,25 @@
 # Build and Release Folders
 bin-debug/
 bin-release/
-starling/doc/html/
+bin/*.*
+dist
+bin
 
 # Project property files
 .settings/
-.flexProperties
-.FlexUnitSettings
-.idea/
 
 # OS X folders
 .DS_Store
-/starling/bin/StarlingMRTFork.swc
-/starling/.flexLibProperties
-/starling/.project
-/starling/.actionScriptProperties
-/.actionScriptProperties
-/.project
-/html-template
+
+# Windows
+Thumbs.db
+
+## File-based project format:
+*.iws
+
+## Plugin-specific files:
+
+# IDEA
+/out/
+/.idea
+*.iml

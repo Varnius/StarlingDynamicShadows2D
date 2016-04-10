@@ -1,27 +1,27 @@
 /*
- Copyright (c) 2014 Josh Tynjala
+Copyright 2012-2015 Bowler Hat LLC
 
- Permission is hereby granted, free of charge, to any person
- obtaining a copy of this software and associated documentation
- files (the "Software"), to deal in the Software without
- restriction, including without limitation the rights to use,
- copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following
- conditions:
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
 
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
- */
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/
 package feathers.themes
 {
 	import starling.core.Starling;
@@ -29,24 +29,7 @@ package feathers.themes
 	import starling.utils.AssetManager;
 
 	/**
-	 * Dispatched when the theme's assets are loaded, and the theme has
-	 * initialized. Feathers component will not be skinned automatically by the
-	 * theme until this event is dispatched.
-	 *
-	 * <p>The properties of the event object have the following values:</p>
-	 * <table class="innertable">
-	 * <tr><th>Property</th><th>Value</th></tr>
-	 * <tr><td><code>bubbles</code></td><td>false</td></tr>
-	 * <tr><td><code>currentTarget</code></td><td>The Object that defines the
-	 *   event listener that handles the event. For example, if you use
-	 *   <code>myButton.addEventListener()</code> to register an event listener,
-	 *   myButton is the value of the <code>currentTarget</code>.</td></tr>
-	 * <tr><td><code>data</code></td><td>null</td></tr>
-	 * <tr><td><code>target</code></td><td>The Object that dispatched the event;
-	 *   it is not always the Object listening for the event. Use the
-	 *   <code>currentTarget</code> property to always access the Object
-	 *   listening for the event.</td></tr>
-	 * </table>
+	 * @copy feathers.themes.IAsyncTheme#event:complete
 	 *
 	 * @eventType starling.events.Event.COMPLETE
 	 */
@@ -65,9 +48,9 @@ package feathers.themes
 	 *     <li>images/metalworks_mobile.xml</li>
 	 * </ul>
 	 *
-	 * @see http://wiki.starling-framework.org/feathers/theme-assets
+	 * @see http://feathersui.com/help/theme-assets.html
 	 */
-	public class MetalWorksMobileThemeWithAssetManager extends BaseMetalWorksMobileTheme
+	public class MetalWorksMobileThemeWithAssetManager extends BaseMetalWorksMobileTheme implements IAsyncTheme
 	{
 		/**
 		 * @private
@@ -76,12 +59,18 @@ package feathers.themes
 		protected static const ATLAS_NAME:String = "metalworks_mobile";
 
 		/**
+		 * @private
+		 */
+		protected static const ATLAS_SCALE_FACTOR:int = 2;
+
+		/**
 		 * Constructor.
 		 * @param assetsBasePath The root folder of the assets.
-		 * @param assetManager An optional pre-created asset manager.
+		 * @param assetManager An optional pre-created AssetManager. The scaleFactor property must be equal to Starling.contentScaleFactor. To load assets with a different scale factor, use multiple AssetManager instances.
 		 */
-		public function MetalWorksMobileThemeWithAssetManager(assetsBasePath:String = null, assetManager:AssetManager = null)
+		public function MetalWorksMobileThemeWithAssetManager(assetsBasePath:String = "./", assetManager:AssetManager = null)
 		{
+			super();
 			this.loadAssets(assetsBasePath, assetManager);
 		}
 
@@ -91,14 +80,19 @@ package feathers.themes
 		 */
 		protected var assetPaths:Vector.<String> = new <String>
 		[
-			"images/metalworks_mobile.xml",
-			"images/metalworks_mobile.png"
+			"images/" + ATLAS_NAME + ".xml",
+			"images/" + ATLAS_NAME + ".png"
 		];
 
 		/**
 		 * @private
 		 */
 		protected var assetManager:AssetManager;
+
+		/**
+		 * @private
+		 */
+		protected var isComplete:Boolean = false;
 
 		/**
 		 * @private
@@ -114,12 +108,28 @@ package feathers.themes
 		}
 
 		/**
+		 * @copy feathers.themes.IAsyncTheme#isCompleteForStarling()
+		 */
+		public function isCompleteForStarling(starling:Starling):Boolean
+		{
+			return this.isComplete;
+		}
+
+		/**
 		 * @private
 		 */
 		override protected function initialize():void
 		{
-			this.atlas = this.assetManager.getTextureAtlas(ATLAS_NAME);
+			this.initializeTextureAtlas();
 			super.initialize();
+		}
+
+		/**
+		 * @private
+		 */
+		protected function initializeTextureAtlas():void
+		{
+			this.atlas = this.assetManager.getTextureAtlas(ATLAS_NAME);
 		}
 
 		/**
@@ -132,7 +142,8 @@ package feathers.themes
 				return;
 			}
 			this.initialize();
-			this.dispatchEventWith(Event.COMPLETE);
+			this.isComplete = true;
+			this.dispatchEventWith(Event.COMPLETE, false, Starling.current);
 		}
 
 		/**
@@ -140,11 +151,17 @@ package feathers.themes
 		 */
 		protected function loadAssets(assetsBasePath:String, assetManager:AssetManager):void
 		{
-			this.assetManager = assetManager;
-			if(!this.assetManager)
+			var oldScaleFactor:Number = -1;
+			if(assetManager)
 			{
-				this.assetManager = new AssetManager(Starling.contentScaleFactor);
+				oldScaleFactor = assetManager.scaleFactor;
+				assetManager.scaleFactor = ATLAS_SCALE_FACTOR;
 			}
+			else
+			{
+				assetManager = new AssetManager(ATLAS_SCALE_FACTOR);
+			}
+			this.assetManager = assetManager;
 			//add a trailing slash, if needed
 			if(assetsBasePath.lastIndexOf("/") != assetsBasePath.length - 1)
 			{
@@ -156,6 +173,11 @@ package feathers.themes
 			{
 				var asset:String = assetPaths[i];
 				this.assetManager.enqueue(assetsBasePath + asset);
+			}
+			if(oldScaleFactor != -1)
+			{
+				//restore the old scale factor, just in case
+				this.assetManager.scaleFactor = oldScaleFactor;
 			}
 			this.assetManager.loadQueue(assetManager_onProgress);
 		}
